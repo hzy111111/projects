@@ -25,11 +25,16 @@ epochs=10
 #网络结构
 def cnn_model():
     model = Sequential()
-    model.add(Conv2D(32, (5, 5), input_shape=(1, 28, 28), activation='relu'))
+    model.add(Conv2D(32, (3, 3), input_shape=(1, 28, 28), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.2))
+    #model.add(Dropout(0.2))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
+    model.add(Dense(128, activation='tanh'))
+    model.add(Dropout(0.8))
+    model.add(Dense(256, activation='tanh'))
+    model.add(Dropout(0.8))
     model.add(Dense(num_classes, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -38,7 +43,7 @@ def cnn_model():
 #训练模型
 def train_model():
     model = cnn_model()
-    model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=1, batch_size=200, verbose=2)
+    model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=10, batch_size=200, verbose=2)
     #verbose : 进度表示方式。0表示不显示数据，1表示显示进度条，2表示用只显示一个数据。
     #model.summary()
     return model
@@ -49,7 +54,8 @@ def prediction(model):
     print("Baseline Error: %.2f%%" % (100-scores[1]*100))
 
 if __name__ == "__main__":
-    model=train_model()
+    model = train_model()
     prediction(model)
-#loss: 0.0156 - acc: 0.9950 - val_loss: 0.0364 - val_acc: 0.9882 Baseline Error: 1.18%
+# - 23s - loss: 0.0605 - acc: 0.9820 - val_loss: 0.0286 - val_acc: 0.9914
+# Baseline Error: 0.86%
 
