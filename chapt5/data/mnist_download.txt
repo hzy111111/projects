@@ -1,0 +1,1 @@
+http://www.tensorfly.cn/tfdoc/tutorials/mnist_download.html
