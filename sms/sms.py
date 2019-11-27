@@ -342,7 +342,8 @@ def cnn():
 
 def xgb():
     """
-
+    wordbgtfidf-acc:0.961
+    doc2vec-acc:0.9565
     :return: 返回xgboosting模型
     """
     model = XGBClassifier(n_estimate=100, n_jobs=-1)
@@ -354,12 +355,16 @@ def train(x_train, y_train, method_type, model_type):
     :param x_train:向量化后的所有训练样本内容，array，(n_samples, output_dim)
     :param y_train:训练样本标签，array, (n_smaples, )
     :param method_type:方法类型，int，0：机器学习；1：深度学习
-    :param model_type:模型类型，int，00:gnb  10:dnn  11:cnn  12:xgb
+    :param model_type:模型类型，int，00:gnb  01:xgb  10:dnn  11:cnn
     :return:model:训练好的模型
     """
     if method_type == 0:#ml
         if model_type == 0:
             model = gnb()
+            model.fit(x_train, y_train)
+            return model
+        if model_type == 1:
+            model = xgb()
             model.fit(x_train, y_train)
             return model
     if method_type == 1:#dl
@@ -369,10 +374,6 @@ def train(x_train, y_train, method_type, model_type):
             return model
         if model_type == 1:
             model = cnn()
-            model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, shuffle=True)
-            return model
-        if model_type == 2:
-            model = xgb()
             model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, shuffle=True)
             return model
 
@@ -401,9 +402,9 @@ if __name__ == "__main__":
     batch_size = 200
     epochs = 4
 
-    load_type = 1    # 0:词袋+tf-idf 1:vocabulary 2:word2vec 3:doc2vec
-    method_type = 1  # 0：machine learning 1：deep learning
-    model_type = 0   # 00:gnb  10:dnn  11:cnn  12:xgb
+    load_type = 0    # 0:词袋+tf-idf 1:vocabulary 2:word2vec 3:doc2vec
+    method_type = 0  # 0：machine learning 1：deep learning
+    model_type = 1   # 00:gnb  01:xgb  10:dnn  11:cnn
 
     x_train, y_train, x_test, y_test = get_features(load_type)
     trained_model = train(x_train, y_train, method_type, model_type)
