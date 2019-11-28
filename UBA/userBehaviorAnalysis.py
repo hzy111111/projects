@@ -1,5 +1,4 @@
 #coding=utf-8
-
 import tensorflow as tf
 from tensorflow import keras
 import os
@@ -25,7 +24,6 @@ from sklearn.metrics import accuracy_score
 #数据输入
 def load_data(file_path):
     """
-
     :param file_path: 文件路径，string
     :return:
     x:文本内容，list of string,7500
