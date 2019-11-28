@@ -1,4 +1,5 @@
 #coding=utf-8
+
 import tensorflow as tf
 from tensorflow import keras
 import os
@@ -20,10 +21,12 @@ from sklearn.utils import shuffle
 import multiprocessing
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
+from hmmlearn.hmm import MultinomialHMM
 
 #数据输入
 def load_data(file_path):
     """
+
     :param file_path: 文件路径，string
     :return:
     x:文本内容，list of string,7500
@@ -147,6 +150,14 @@ def mlp():
                           shuffle=True, verbose=True)
     return model
 
+def hmm():
+    """
+    vocabulary-acc = 0.9369
+    :return:返回mlp模型
+    """
+    model = MultinomialHMM(n_components=2, n_iter=100, algorithm="viterbi")
+    return model
+
 def cnn():
     """
     wordbagtfidf-acc =0.9667
@@ -210,7 +221,7 @@ def train(x_train, y_train, method_type, model_type, batch_size, epochs):
     :param x_train:向量化后的所有训练样本内容，array，(n_samples, output_dim)
     :param y_train:训练样本标签，array, (n_smaples, )
     :param method_type:方法类型，int，0：机器学习；1：深度学习
-    :param model_type:模型类型，int，00:gnb  01:svm  02:mlp  10:cnn 11:lstm
+    :param model_type:模型类型，int，00:gnb  01:svm  02:mlp 03:hmm 10:cnn 11:lstm
     :param batch_size:一次训练所选取的样本，int
     :param epochs:所有样本重复次数，int
     :return:model:训练好的模型
@@ -220,11 +231,16 @@ def train(x_train, y_train, method_type, model_type, batch_size, epochs):
         model = gnb()
         if model_type == 0:
             model = gnb()
+            model.fit(x_train, y_train)
         if model_type == 1:
             model = svm()
-        elif model_type == 2:
+            model.fit(x_train, y_train)
+        if model_type == 2:
             model = mlp()
-        model.fit(x_train, y_train)
+            model.fit(x_train, y_train)
+        elif model_type == 3:
+            model = hmm()
+            model.fit(x_train)
         return model
 
     elif method_type == 1:
@@ -244,17 +260,40 @@ def test(x_test, y_test, trained_model, input_type):
     :param y_test: 测试样本标签，array, (n_smaples, )
     :param trained_model: 训练好的模型
     :param input_type: 方法类型，int，0：机器学习；1：深度学习
-    :return: accuracy:准确率
+    :return: acc:准确率
     """
+    acc = 0.0
     if input_type == 0:
         y_pred = trained_model.predict(x_test)
         acc = accuracy_score(y_test, y_pred)
-        #accuracy = model.evaluate(x_test, y_test)
-        return acc
+
     elif input_type == 1:
         scores = trained_model.evaluate(x_test, y_test, verbose=1)
-        accuracy = scores[1]
-        return accuracy
+        acc = scores[1]
+    return acc
+
+def test_hmm(x_test, y_test, hmm_model):
+    """
+    计算hmm模型在测试集的准确率
+    :param x_test: 向量化后的所有测试样本内容，array，(n_samples, output_dim)
+    :param y_test: 测试样本标签，array, (n_smaples, ) 
+    :param hmm_model: 训练好的hmm模型
+    :return: acc:准确率
+    """
+    T = -580 #for T in range(-1000,0,100)寻找T值
+    y_predict = []
+    for i in x_test:
+        z = []
+        for j in i:
+            z.append([j])
+        y_pred = hmm_model.score(z)
+        if y_pred < T:
+            y_predict.append(1)
+        else:
+            y_predict.append(0)
+    y_predict = np.array(y_predict)
+    acc = accuracy_score(y_test, y_predict)
+    print(acc)
 
 if __name__=="__main__":
     file_path = '/home/hezhouyu/projects/dataset/sea/'
@@ -263,11 +302,12 @@ if __name__=="__main__":
     batch_size = 200
     epochs = 5
 
-    method_type = 1   #0:'ml'  1:'dl'
-    model_type =1  #00:gnb  01:svm  02:mlp  10:cnn 11:lstm
+    method_type = 0   #0:'ml'  1:'dl'
+    model_type = 3  #00:gnb  01:svm  02:mlp 03:hmm 10:cnn 11:lstm
     load_type = 1 #0:wordbagtfidf 1:vocabulary
-    x_train, y_train, x_test, y_test = get_features(load_type)
 
+    x_train, y_train, x_test, y_test = get_features(load_type)
     print('x_train.shape = ', x_train.shape, 'y_train.shape',  y_train.shape)
     trained_model = train(x_train, y_train, method_type, model_type, batch_size, epochs)
-    print(test(x_test, y_test, trained_model, method_type))
+    test_hmm(x_test, y_test, trained_model)
+    #print(test(x_test, y_test, trained_model, method_type))
