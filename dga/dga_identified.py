@@ -189,7 +189,7 @@ def mlp():
 
 def lstm():
     """
-    3gramwordbag-acc = 0.557
+    3gramwordbag-acc = 0.65
     :return:返回lstm 模型
     """
     input_dim = max_words
